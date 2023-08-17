@@ -1,13 +1,15 @@
 import psycopg2
 
-comands = """
-ct - создать таблицы 
-ap - добавить телефон в бд
-up - обновить телефон
-ac - добавить клиента в бд
-uc - обновить данные клиента
-s - найти клиента
-"""
+comands = {
+'ct' : 'Создать таблицы',
+'ap' : 'Добавить телефон в бд',
+'up' : 'Обновить телефон',
+'ac' : 'Добавить клиента в бд',
+'uc' : 'Обновить данные клиента',
+'s'  : 'Найти клиента',
+'h' : 'Выдать все имеющиеся команды',
+'q' : 'Завершить работу'
+}
 
 def create_tables(conn):
     with conn.cursor() as cur:
@@ -58,7 +60,7 @@ def add_customer(user_info, phone_number=None ):
 
 def update_customer(*user_info):
     with conn.cursor() as cur:
-        cur.execute(f"""
+        cur.execute("""
                     UPDATE customer SET first_name=%s, last_name=%s, email=%s WHERE id=%s ;
                     """, (user_info))
 
@@ -87,30 +89,38 @@ def search_customer(keyword, column):
 
 
 if __name__ == "__main__":
+    columns = {'1':'id', '2':'first_name', '3':'last_name', '4':'email',  '5':'phone_number'}
     while True:
-        with psycopg2.connect(database='psycopg', user='postgres', password='s5130462') as conn:
-            with conn.cursor() as cur:
-                comand = input('Введите команду: ')
-                if comand == 'ct':
-                    create_tables()
-                    print('Таблицы созданы.')
-                elif comand == 'ap':
-                    phone_info = [input('Введите номер телефона:'), input('Введите id клиента:'), input('Введите id телефона:')]
-                    data =  [x for x in phone_info if x!='']
-                    add_phone(*data)
-                    print('Телефон добавлен.')
-                elif comand == 'ac':
-                    cusomer_info = [input('Введите имя клиента:'), input('Введите фамилию клиента:'), input('Введите email клиента:')]
-                    add_customer(cusomer_info, input('Введите телефон клиента:'))
-                    print('Клиент добавлен.')
-                elif comand == 'uc':
-                    customer_info = [input('Введите имя клиента:'), input('Введите фамилию клиента:'), input('Введите email клиента:'), input('Введите id клиента:')]
-                    update_customer(*customer_info)
-                elif comand == 's':
-                    keyword, column = input('Поисковой запрос:'), input('Где искать? (id - 1, имя - 2, фамилия - 3, email - 4, Номер телефона - 5)')
-                    c = {'1':'id', '2':'first_name', '3':'last_name', '4':'email',  '5':'phone_number'}
-                    search_customer(keyword, c[column])
-                elif comand == 'h':
-                    print(comands)
-                elif comand == 'q':
-                    break
+        comand = input('Введите команду: ')
+        if comand in comands.keys():
+            with psycopg2.connect(database='psycopg', user='postgres', password='s5130462') as conn:
+                with conn.cursor() as cur:
+                    if comand == 'ct':
+                        create_tables()
+                        print('Таблицы созданы.')
+                    elif comand == 'ap':
+                        phone_info = [input('Введите номер телефона:'), input('Введите id клиента:'), input('Введите id телефона:')]
+                        data =  [x for x in phone_info if x!='']
+                        add_phone(*data)
+                        print('Телефон добавлен.')
+                    elif comand == 'ac':
+                        cusomer_info = [input('Введите имя клиента:').capitalize, input('Введите фамилию клиента:').capitalize, input('Введите email клиента:')]
+                        add_customer(cusomer_info, input('Введите телефон клиента:'))
+                        print('Клиент добавлен.')
+                    elif comand == 'uc':
+                        customer_info = [input('Введите имя клиента:').capitalize, input('Введите фамилию клиента:').capitalize, input('Введите email клиента:'), input('Введите id клиента:')]
+                        update_customer(*customer_info)
+                        print(f'Данные клиента')
+                    elif comand == 's':
+                        column = input('По какому поараметру искать?\n Id - 1\n Имя - 2\n Фамилия - 3\n Email - 4\n Номер телефона - 5\n')
+                        if column in columns.keys():
+                            keyword  = input('Поисковой запрос:')
+                            search_customer(keyword, columns[column])
+                        else:
+                            print('Такого параметра нет!')
+                    elif comand == 'h':
+                        print(comands)
+                    elif comand == 'q':
+                        break
+        else:
+            print('Такой команды нет, попробуйте, еще  раз.')   
